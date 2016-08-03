@@ -51,6 +51,7 @@ static BOOL RCTShouldReloadImageForSizeChange(CGSize currentSize, CGSize idealSi
 {
   __weak RCTBridge *_bridge;
   CGSize _targetSize;
+  NSArray<RCTImageSource *> *_previousSource;
 
   /**
    * A block that can be invoked to cancel the most recent call to -reloadImage,
@@ -152,6 +153,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 - (void)setSource:(NSArray<RCTImageSource *> *)source
 {
   if (![source isEqual:_source]) {
+    _previousSource = _source;
     _source = [source copy];
     [self reloadImage];
   }
@@ -240,7 +242,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (BOOL)desiredImageSourceDidChange
 {
-  return ![[self imageSourceForSize:self.frame.size] isEqual:_imageSource];
+  return ![_previousSource isEqual:_source];
 }
 
 - (void)reloadImage
@@ -358,6 +360,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
         _targetSize = idealSize;
         [self reloadImage];
       }
+    } else {
+      // Our existing image is good enough.
+      [self cancelImageLoad];
+      _targetSize = imageSize;
     }
   }
 }
